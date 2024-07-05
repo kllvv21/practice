@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Фоторедактор")
+        self.setWindowTitle("Фоторедактор") #Настройка главного окна
         self.setGeometry(50, 50, 500, 500)
 
         central_widget = QWidget()
@@ -46,7 +46,7 @@ class MainWindow(QMainWindow):
 
         main_layout.addLayout(button_layout)
 
-        self.combobox = QComboBox()
+        self.combobox = QComboBox() #Выпадающий список для выбора отображения каналов
         self.combobox.setFixedHeight(30)
         self.combobox.addItems(["Все каналы", "Красный канал", "Зеленый канал", "Синий канал"])
         self.combobox.currentIndexChanged.connect(self.update_image_channel)
@@ -200,6 +200,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Ошибка", "Необходимо загрузить изображение")
             return
         try:
+            # Изменения только для запоненых полей
             new_width = int(self.width_input.text()) if self.width_input.text() else None
             new_height = int(self.height_input.text()) if self.height_input.text() else None
             brightness_value = int(self.brightness_input.text()) if self.brightness_input.text() else 0
