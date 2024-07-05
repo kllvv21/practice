@@ -119,6 +119,7 @@ class MainWindow(QMainWindow):
         self.original_image = None
 
     def show_button(self):
+        """Появление кнопки 'Сделать фото'"""
         self.capture_button.show()
 
     def center(self):
