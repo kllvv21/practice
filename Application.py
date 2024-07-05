@@ -7,27 +7,24 @@ import numpy as np
 
 
 class MainWindow(QMainWindow):
+    """Основное окно фоторедактора"""
+
     def __init__(self):
         super().__init__()
 
-        # Настраиваем главное окно
         self.setWindowTitle("Фоторедактор")
         self.setGeometry(50, 50, 500, 500)
 
-        # Создаем центральный виджет
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        # Создаем вертикальный layout
         main_layout = QVBoxLayout()
 
-        # Место для картинки
         self.image_label = QLabel()
         self.image_label.setFixedSize(750, 430)
         self.image_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.image_label, alignment=Qt.AlignCenter)
 
-        # Создаем горизонтальный layout для кнопок
         button_layout = QHBoxLayout()
 
         self.button1 = QPushButton("Выбор изображения на компьютере")
@@ -49,25 +46,23 @@ class MainWindow(QMainWindow):
 
         main_layout.addLayout(button_layout)
 
-        # Создаем выпадающий список для выбора отображения
         self.combobox = QComboBox()
         self.combobox.setFixedHeight(30)
         self.combobox.addItems(["Все каналы", "Красный канал", "Зеленый канал", "Синий канал"])
         self.combobox.currentIndexChanged.connect(self.update_image_channel)
         main_layout.addWidget(self.combobox)
 
-        # Создаем горизонтальный layout для ввода высоты, ширины и яркости
         input_layout = QHBoxLayout()
 
         self.label = QLabel("Изменение размера изображения")
         input_layout.addWidget(self.label)
 
         self.height_input = QLineEdit()
-        self.height_input.setPlaceholderText("Высота изображения")
+        self.height_input.setPlaceholderText("Высота")
         input_layout.addWidget(self.height_input)
 
         self.width_input = QLineEdit()
-        self.width_input.setPlaceholderText("Ширина изображения")
+        self.width_input.setPlaceholderText("Ширина")
         input_layout.addWidget(self.width_input)
 
         main_layout.addLayout(input_layout)
@@ -81,7 +76,6 @@ class MainWindow(QMainWindow):
         input_layout2.addWidget(self.brightness_input)
         main_layout.addLayout(input_layout2)
 
-        # Создаем горизонтальный layout для ввода центра круга и его размера
         circle_layout = QHBoxLayout()
 
         self.circle_label = QLabel("Нарисовать круг")
@@ -100,7 +94,6 @@ class MainWindow(QMainWindow):
 
         main_layout.addLayout(circle_layout)
 
-        # Создаем кнопки для применения и отмены изменений
         action_button_layout = QHBoxLayout()
 
         self.apply_button = QPushButton("Применить изменения")
@@ -116,7 +109,6 @@ class MainWindow(QMainWindow):
 
         main_layout.addLayout(action_button_layout)
 
-        # Устанавливаем основной layout
         central_widget.setLayout(main_layout)
 
         self.cap = None
@@ -136,6 +128,8 @@ class MainWindow(QMainWindow):
         self.move(qr.topLeft())
 
     def open_image(self):
+        """Открытие диалогового окна для выбора изображения,
+        загрузка выбранного изображения и отображение на экране"""
         file_dialog = QFileDialog(self)
         filename, _ = file_dialog.getOpenFileName(self, "Выбрать изображение", "", "Изображения (*.png *.jpg)")
         if filename:
@@ -144,17 +138,19 @@ class MainWindow(QMainWindow):
             self.display_image(self.current_image)
 
     def start_camera(self):
-        self.cap = cv2.VideoCapture(0)  # Открываем веб-камеру
+        """Инициализация камеры и запуск видеопотока"""
+        self.cap = cv2.VideoCapture(0)
         self.timer.start(30)
-        self.capture_button.setEnabled(True)
 
     def display_video_stream(self):
+        """Считывание кадра из видеопотока"""
         ret, frame = self.cap.read()
         if ret:
             self.current_image = frame
             self.display_image(frame)
 
     def capture_image(self):
+        """Cнимок текущего кадра с камеры"""
         self.capture_button.hide()
         ret, frame = self.cap.read()
         if ret:
@@ -166,6 +162,7 @@ class MainWindow(QMainWindow):
             self.capture_button.setEnabled(False)
 
     def display_image(self, image):
+        """Отображение изображения"""
         if image is not None:
             channel = self.combobox.currentText()
             if channel == "Красный канал":
@@ -183,23 +180,24 @@ class MainWindow(QMainWindow):
             self.image_label.setPixmap(pixmap.scaled(self.image_label.size(), Qt.KeepAspectRatio))
 
     def update_image_channel(self):
+        """Обновление отображения текущего изображения"""
         if self.current_image is not None:
             self.display_image(self.current_image)
 
     @staticmethod
     def extract_channel(image, channel_idx):
+        """Извлечение одного из цветовых каналов изображения"""
         channel_image = np.zeros_like(image)
         channel_image[:, :, channel_idx] = image[:, :, channel_idx]
         return channel_image
 
     def apply_changes(self):
+        """Применение изменений к текущему изображению"""
         global resized_image
         if self.current_image is None:
-            QMessageBox.warning(self, "Ошибка", "Сначала загрузите изображение.")
+            QMessageBox.warning(self, "Ошибка", "Необходимо загрузить изображение")
             return
-
         try:
-            # Применяем изменения только для тех полей, которые были заполнены
             new_width = int(self.width_input.text()) if self.width_input.text() else None
             new_height = int(self.height_input.text()) if self.height_input.text() else None
             brightness_value = int(self.brightness_input.text()) if self.brightness_input.text() else 0
@@ -233,26 +231,24 @@ class MainWindow(QMainWindow):
             else:
                 raise ValueError("Значение яркости должно быть в диапазоне от 0 до 255 включительно")
                 adjusted_image = self.adjust_brightness(resized_image, 0)
-
             if center_x is not None and center_y is not None and radius is not None:
                 circled_image = self.draw_circle(adjusted_image, center_x, center_y, radius)
             else:
                 circled_image = adjusted_image
-
             self.current_image = circled_image
             self.display_image(self.current_image)
-
             self.clear_inputs()
-
         except ValueError as e:
             QMessageBox.warning(self, "Ошибка", f"Некорректные значения: {e}")
 
     def reset_image(self):
+        """Cброс изображения к исходному состоянию"""
         if self.original_image is not None:
             self.current_image = self.original_image.copy()
             self.display_image(self.current_image)
 
     def clear_inputs(self):
+        """Очищения полей для ввода после нажатия кнопки 'Применить изменения'"""
         self.width_input.clear()
         self.height_input.clear()
         self.brightness_input.clear()
@@ -261,23 +257,21 @@ class MainWindow(QMainWindow):
         self.radius_input.clear()
 
     @staticmethod
-    def adjust_brightness(image, brightness):
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        h, s, v = cv2.split(hsv)
-        v = np.clip(v - brightness, 0, 255)
-        final_hsv = cv2.merge((h, s, v))
-        image = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+    def adjust_brightness(image, value):
+        """Функция, понижающая яркость изображения"""
+        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        hsv_image[:, :, 2] = hsv_image[:, :, 2] - value
+        hsv_image[:, :, 2] = np.clip(hsv_image[:, :, 2], 0, 255)
+        image = cv2.cvtColor(hsv_image, cv2.COLOR_HSV2BGR)
         return image
 
     @staticmethod
     def draw_circle(image, center_x, center_y, radius):
-        # Проверка, что координаты центра круга и радиус не выходят за границы изображения
+        """Функция, рисующая красный круг на изображении"""
         height, width, _ = image.shape
         if center_x < 0 or center_x >= width or center_y < 0 or center_y >= height:
             raise ValueError("Координаты центра круга выходят за границы изображения")
         if (radius <= 0 or center_x - radius < 0 or center_x + radius >= width or center_y - radius < 0
                 or center_y + radius >= height):
             raise ValueError("Радиус круга должен быть положительным числом и в пределах границ изображения")
-
-        # Рисуем круг
         return cv2.circle(image, (center_x, center_y), radius, (0, 0, 255), 2)
