@@ -123,6 +123,7 @@ class MainWindow(QMainWindow):
         self.capture_button.show()
 
     def center(self):
+        """Центрирует окно на экране"""
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
